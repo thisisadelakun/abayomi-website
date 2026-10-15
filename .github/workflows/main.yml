@@ -33,21 +33,15 @@ jobs:
       - name: Build website
         run: npm run build
 
-      - name: Install LFTP
-        run: sudo apt-get update && sudo apt-get install -y lftp
-
-      - name: Deploy dist to HostAfrica
-        env:
-          FTP_HOST: ${{ secrets.FTP_HOST }}
-          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-          FTP_REMOTE_DIR: ${{ secrets.FTP_REMOTE_DIR }}
-        run: |
-          lftp <<EOF
-          set ftp:ssl-force true
-          set ftp:ssl-protect-data true
-          set ssl:verify-certificate true
-          open -u "$FTP_USERNAME","$FTP_PASSWORD" ftp://$FTP_HOST
-          mirror --reverse --verbose --parallel=4 dist/ "$FTP_REMOTE_DIR"
-          bye
-          EOF
+      - name: Deploy to HostAfrica
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: ./dist/
+          server-dir: ${{ secrets.FTP_REMOTE_DIR }}
+          security: strict
+          log-level: standard
